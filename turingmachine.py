@@ -1,17 +1,15 @@
 class TuringMachine(object):
 	def __init__(self):
-		self.fita = None
-		self.posicao_cabeca = 0
-		self.instrucoes = None
-		self.estado_atual = 'q0'
-		self.leitura_cabeca = 0
-
+		pass
 	def start(self, fita, instrucoes):
+		self.limparMaquina()
 		self.stringToList(fita)
 		self.instrucoes = instrucoes
 		self.leitura_cabeca = self.fita[0]
 		while self.estado_atual!='END':
-			self.operacao()
+			fita = self.operacao()
+		while self.fita[0] == ' ':
+			self.fita.pop(0)
 		return ''.join(self.fita)
 
 	def stringToList(self, fita):
@@ -34,4 +32,11 @@ class TuringMachine(object):
 			self.leitura_cabeca = self.fita[self.posicao_cabeca]
 		else:
 			raise Exception('A operação {0} não foi encontrada na lista de instruções'.format(chave))
-		print(''.join(self.fita))
+		return self.fita
+
+	def limparMaquina(self):
+		self.fita = None
+		self.posicao_cabeca = 0
+		self.instrucoes = None
+		self.estado_atual = 'q0'
+		self.leitura_cabeca = 0
