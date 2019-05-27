@@ -5,11 +5,12 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayou
 
 qt_app = QApplication(sys.argv)
 
+
 class Window(QWidget):
 	def __init__(self):
 		QWidget.__init__(self)
 		self.setWindowTitle('Turing Machine')
-
+		self.e = Executar()
 		texto_insirafita = QLabel('Insira a fita aqui:', self)
 		self.entrada_fita = QLineEdit(self)
 		caixa_insirafita = QVBoxLayout()
@@ -35,15 +36,26 @@ class Window(QWidget):
 		caixa_definesimbolos.addLayout(caixa_listasimbolos)
 		caixa_definesimbolos.addLayout(caixa_passos)
 		caixa_definesimbolos.addWidget(gerar_tabela)
+
 		caixa_configuracoes = QHBoxLayout()
 		caixa_configuracoes.addLayout(caixa_insirafita)
 		caixa_configuracoes.addLayout(caixa_definesimbolos)
+
 		self.caixa_geral = QVBoxLayout()
 		self.caixa_geral.addLayout(caixa_configuracoes)
 		self.tabela()
+		botao_passoapasso = QPushButton('Execução passo a passo')
+		botao_passoapasso.clicked.connect(self.processar)
+		botao_direto = QPushButton('Execução contínua')
+		caixa_execucao = QHBoxLayout()
+		caixa_execucao.addWidget(botao_passoapasso)
+		caixa_execucao.addWidget(botao_direto)
+		self.caixa_geral.addLayout(caixa_execucao)
+		self.setMinimumHeight(600)
 		self.setLayout(self.caixa_geral)
 
 	def tabela(self):
+		# TODO: botoes de adicionar ou excluir linhas
 		self.tabela = QTableWidget()
 		botao_adicionarlinha = QPushButton('Adicionar Linha')
 		botao_excluirlinha = QPushButton('Excluir Linha')
@@ -52,19 +64,20 @@ class Window(QWidget):
 		caixa_botoestabela.addWidget(botao_excluirlinha)
 		self.caixa_geral.addLayout(caixa_botoestabela)
 		self.caixa_geral.addWidget(self.tabela)
-		self.tabela.setColumnCount(3)
-		self.tabela.setRowCount(3)
-		self.setMinimumHeight(600)
-		self.setLayout(self.caixa_geral)
+		self.tabela.setColumnCount(5)
+		self.tabela.setRowCount(6)
+		self.tabela.setItem(0, 0, QTableWidgetItem('Instrução'))
+		self.tabela.setItem(0, 1, QTableWidgetItem('Leitura'))
+		self.tabela.setItem(0, 2, QTableWidgetItem('Próximo passo'))
+		self.tabela.setItem(0, 3, QTableWidgetItem('Substituir'))
+		self.tabela.setItem(0, 4, QTableWidgetItem('Direçao (E ou D)'))
+		self.tabela.setItem(1, 0, QTableWidgetItem('q0'))
+		self.tabela.setItem(1, 1, QTableWidgetItem('>'))
 
 	def gerar_tabela(self):
 		lista_simbolos = self.entrada_simbolos.text().split(',')
 		passos = int(self.entrada_passos.text())
-
-		self.tabela.setColumnCount((len(lista_simbolos) + 2))
 		self.tabela.setRowCount((passos * len(lista_simbolos)) + 1)
-		for i in range(len(lista_simbolos)):
-			self.tabela.setItem(0, i + 2, QTableWidgetItem('{}'.format(lista_simbolos[i])))
 		cont = 1
 		for i in range(passos):
 			for j in range(len(lista_simbolos)):
@@ -73,9 +86,37 @@ class Window(QWidget):
 				cont = cont + 1
 
 	def processar(self):
-		pass
+		instrucoes = {}
+		colunas = self.tabela.columnCount()
+		linhas = self.tabela.rowCount()
+		for linha in range(1,linhas):
+			chave = ()
+			lista_chave = []
+			instrucao = []
+			for coluna in range(colunas):
+				if coluna < 2:
+					lista_chave.append((self.tabela.item(linha, coluna)).text())
+				else:
+					instrucao.append((self.tabela.item(linha, coluna)).text())
+			chave = tuple(lista_chave)
+			print(chave)
+			instrucoes[chave] = instrucao
+		print(instrucoes)
+		self.e.show()
+
 	def run(self):
 		self.show()
 		qt_app.exec_()
+
+
+class Executar(QWidget):
+	def __init__(self):
+		QWidget.__init__(self)
+		self.setWindowTitle('Executar')
+		self.fita = QTableWidget(2,100)
+		layout = QVBoxLayout()
+		layout.addWidget(self.fita)
+		self.setLayout(layout)
+
 
 Window().run()
