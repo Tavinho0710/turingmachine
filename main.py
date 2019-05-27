@@ -1,5 +1,5 @@
 import sys
-
+import instrucoes as Exemplo
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, \
 	QTableWidget, QTableWidgetItem
 
@@ -52,6 +52,7 @@ class Window(QWidget):
 		caixa_execucao.addWidget(botao_direto)
 		self.caixa_geral.addLayout(caixa_execucao)
 		self.setMinimumHeight(600)
+		self.gerar_instrucao()
 		self.setLayout(self.caixa_geral)
 
 	def tabela(self):
@@ -87,7 +88,7 @@ class Window(QWidget):
 
 	def processar(self):
 		instrucoes = {}
-		colunas = self.tabela.columnCount()
+		colunas = 5
 		linhas = self.tabela.rowCount()
 		for linha in range(1,linhas):
 			chave = ()
@@ -103,6 +104,20 @@ class Window(QWidget):
 			instrucoes[chave] = instrucao
 		print(instrucoes)
 		self.e.show()
+
+	def gerar_instrucao(self):
+		instrucoes = Exemplo.soma
+		self.tabela.setRowCount(len(instrucoes)+1)
+		self.tabela.clear()
+		cont = int(1)
+		for instrucao in instrucoes:
+			chave = instrucoes[instrucao]
+			self.tabela.setItem(cont,0,QTableWidgetItem(instrucao[0]))
+			self.tabela.setItem(cont,1,QTableWidgetItem(instrucao[1]))
+			self.tabela.setItem(cont,2,QTableWidgetItem(chave[0]))
+			self.tabela.setItem(cont,3,QTableWidgetItem(chave[1]))
+			self.tabela.setItem(cont,4,QTableWidgetItem(chave[2]))
+			cont = cont+1
 
 	def run(self):
 		self.show()

@@ -11,7 +11,7 @@ class TuringMachine(object):
         self.stringToList(fita)
         self.instrucoes = instrucoes
         self.leitura_cabeca = self.fita[0]
-		while self.estado_atual != 'END':
+        while self.estado_atual != 'END':
             fita = self.operacao()
         while self.fita[0] == ' ':
             self.fita.pop(0)
