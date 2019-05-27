@@ -43,21 +43,22 @@ class Window(QWidget):
 		caixa_configuracoes.addLayout(caixa_insirafita)
 		caixa_configuracoes.addLayout(caixa_definesimbolos)
 
-		self.caixa_geral = QVBoxLayout()
-		self.caixa_geral.addLayout(caixa_configuracoes)
+		self.caixa_interface = QVBoxLayout()
+		self.caixa_interface.addLayout(caixa_configuracoes)
 		self.tabela()
 		botao_passoapasso = QPushButton('Execução passo a passo')
-		botao_passoapasso.clicked.connect(self.processar)
-		botao_direto = QPushButton('Execução contínua')
+		botao_direto = QPushButton('Execução direta')
+		botao_direto.clicked.connect(self.processar)
 		caixa_execucao = QHBoxLayout()
 		caixa_execucao.addWidget(botao_passoapasso)
 		caixa_execucao.addWidget(botao_direto)
-		self.caixa_geral.addLayout(caixa_execucao)
+		self.caixa_interface.addLayout(caixa_execucao)
 		self.texto_resultado = QLabel('')
 		self.texto_resultado.setStyleSheet('font: 14pt')
-		self.caixa_geral.addWidget(self.texto_resultado)
+		self.caixa_interface.addWidget(self.texto_resultado)
 		self.gerar_instrucao()
-		self.setLayout(self.caixa_geral)
+		self.caixa_observacoes = QVBoxLayout()
+		self.setLayout(self.caixa_interface)
 
 	def tabela(self):
 		# TODO: botoes de adicionar ou excluir linhas
@@ -67,8 +68,8 @@ class Window(QWidget):
 		caixa_botoestabela = QHBoxLayout()
 		caixa_botoestabela.addWidget(botao_adicionarlinha)
 		caixa_botoestabela.addWidget(botao_excluirlinha)
-		self.caixa_geral.addLayout(caixa_botoestabela)
-		self.caixa_geral.addWidget(self.tabela)
+		self.caixa_interface.addLayout(caixa_botoestabela)
+		self.caixa_interface.addWidget(self.tabela)
 		self.tabela.setColumnCount(5)
 		self.tabela.setRowCount(6)
 		self.tabela.setItem(0, 0, QTableWidgetItem('Instrução'))
@@ -108,9 +109,14 @@ class Window(QWidget):
 		fita = self.entrada_fita.text()
 		maquina = turingmachine.TuringMachine()
 		if fita is not '':
-			self.entrada_fita.setText(maquina.start(fita, instrucoes))
+			self.texto_resultado.setText('Resultado: {0}'.format(maquina.start(fita, instrucoes)))
 		else:
-			pass
+			self.texto_resultado.setText('Entrada de fita vazia')
+
+	def passoapasso(self):
+		# TODO: Execução passo a passo
+		pass
+
 
 	def gerar_instrucao(self):
 		instrucoes = Exemplo.multiplicacao
