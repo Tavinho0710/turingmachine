@@ -1,5 +1,6 @@
 import sys
 import instrucoes as Exemplo
+import turingmachine
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, \
 	QTableWidget, QTableWidgetItem
 
@@ -10,6 +11,7 @@ class Window(QWidget):
 	def __init__(self):
 		QWidget.__init__(self)
 		self.setWindowTitle('Turing Machine')
+		self.setMinimumHeight(600)
 		self.e = Executar()
 		texto_insirafita = QLabel('Insira a fita aqui:', self)
 		self.entrada_fita = QLineEdit(self)
@@ -51,7 +53,9 @@ class Window(QWidget):
 		caixa_execucao.addWidget(botao_passoapasso)
 		caixa_execucao.addWidget(botao_direto)
 		self.caixa_geral.addLayout(caixa_execucao)
-		self.setMinimumHeight(600)
+		self.texto_resultado = QLabel('')
+		self.texto_resultado.setStyleSheet('font: 14pt')
+		self.caixa_geral.addWidget(self.texto_resultado)
 		self.gerar_instrucao()
 		self.setLayout(self.caixa_geral)
 
@@ -100,13 +104,16 @@ class Window(QWidget):
 				else:
 					instrucao.append((self.tabela.item(linha, coluna)).text())
 			chave = tuple(lista_chave)
-			print(chave)
 			instrucoes[chave] = instrucao
-		print(instrucoes)
-		self.e.show()
+		fita = self.entrada_fita.text()
+		maquina = turingmachine.TuringMachine()
+		if fita is not '':
+			self.entrada_fita.setText(maquina.start(fita, instrucoes))
+		else:
+			pass
 
 	def gerar_instrucao(self):
-		instrucoes = Exemplo.soma
+		instrucoes = Exemplo.multiplicacao
 		self.tabela.setRowCount(len(instrucoes)+1)
 		self.tabela.clear()
 		cont = int(1)
@@ -128,6 +135,7 @@ class Executar(QWidget):
 	def __init__(self):
 		QWidget.__init__(self)
 		self.setWindowTitle('Executar')
+		self.setMinimumWidth(200)
 		self.fita = QTableWidget(2,100)
 		layout = QVBoxLayout()
 		layout.addWidget(self.fita)
