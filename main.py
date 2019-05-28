@@ -1,6 +1,5 @@
 import sys
-import instrucoes as Exemplo
-import turingmachine
+import turingmachine, instrucoes
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, \
 	QTableWidget, QTableWidgetItem
 
@@ -50,8 +49,8 @@ class Window(QWidget):
 		botao_direto = QPushButton('Execução direta')
 		botao_direto.clicked.connect(self.processar)
 		caixa_execucao = QHBoxLayout()
-		caixa_execucao.addWidget(botao_passoapasso)
 		caixa_execucao.addWidget(botao_direto)
+		caixa_execucao.addWidget(botao_passoapasso)
 		self.caixa_interface.addLayout(caixa_execucao)
 		self.texto_resultado = QLabel('')
 		self.texto_resultado.setStyleSheet('font: 14pt')
@@ -119,12 +118,12 @@ class Window(QWidget):
 
 
 	def gerar_instrucao(self):
-		instrucoes = Exemplo.multiplicacao
-		self.tabela.setRowCount(len(instrucoes)+1)
+		lista_instrucoes = instrucoes.multiplicacao
+		self.tabela.setRowCount(len(lista_instrucoes)+1)
 		self.tabela.clear()
 		cont = int(1)
-		for instrucao in instrucoes:
-			chave = instrucoes[instrucao]
+		for instrucao in lista_instrucoes:
+			chave = lista_instrucoes[instrucao]
 			self.tabela.setItem(cont,0,QTableWidgetItem(instrucao[0]))
 			self.tabela.setItem(cont,1,QTableWidgetItem(instrucao[1]))
 			self.tabela.setItem(cont,2,QTableWidgetItem(chave[0]))
