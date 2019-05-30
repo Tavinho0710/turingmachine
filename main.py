@@ -1,5 +1,10 @@
+# Máquina de turing para trabalho de 6 fase de Ciência da Computação
+# Autor: Gustavo Niehues
+
+import instrucoes
 import sys
-import turingmachine, instrucoes
+import turingmachine
+
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, \
 	QTableWidget, QTableWidgetItem
 
@@ -11,13 +16,13 @@ class Window(QWidget):
 		QWidget.__init__(self)
 		self.setWindowTitle('Turing Machine')
 		self.setMinimumHeight(600)
-		self.e = Executar()
+		self.maquina_passoapasso = Executar()
+		self.maquina = turingmachine.TuringMachine
 		texto_insirafita = QLabel('Insira a fita aqui:', self)
 		self.entrada_fita = QLineEdit(self)
 		caixa_insirafita = QVBoxLayout()
 		caixa_insirafita.addWidget(texto_insirafita)
 		caixa_insirafita.addWidget(self.entrada_fita)
-
 		texto_listasimbolos = QLabel('Insira aqui a lista de simbolos separados por vírgula:')
 		self.entrada_simbolos = QLineEdit(self)
 		caixa_listasimbolos = QHBoxLayout()
@@ -46,8 +51,9 @@ class Window(QWidget):
 		self.caixa_interface.addLayout(caixa_configuracoes)
 		self.tabela()
 		botao_passoapasso = QPushButton('Execução passo a passo')
+		botao_passoapasso.clicked.connect(self.exec_passoapasso)
 		botao_direto = QPushButton('Execução direta')
-		botao_direto.clicked.connect(self.processar)
+		botao_direto.clicked.connect(self.exec_direto)
 		caixa_execucao = QHBoxLayout()
 		caixa_execucao.addWidget(botao_direto)
 		caixa_execucao.addWidget(botao_passoapasso)
@@ -90,11 +96,11 @@ class Window(QWidget):
 				self.tabela.setItem((cont), 1, QTableWidgetItem(('{}'.format(lista_simbolos[j]))))
 				cont = cont + 1
 
-	def processar(self):
+	def recolher_dados(self):
 		instrucoes = {}
 		colunas = 5
 		linhas = self.tabela.rowCount()
-		for linha in range(1,linhas):
+		for linha in range(1, linhas):
 			chave = ()
 			lista_chave = []
 			instrucao = []
@@ -106,30 +112,32 @@ class Window(QWidget):
 			chave = tuple(lista_chave)
 			instrucoes[chave] = instrucao
 		fita = self.entrada_fita.text()
-		maquina = turingmachine.TuringMachine()
+		return fita, instrucoes
+
+	def exec_direto(self):
+		fita, instrucoes = self.recolher_dados()
 		if fita is not '':
-			self.texto_resultado.setText('Resultado: {0}'.format(maquina.start(fita, instrucoes)))
+			self.texto_resultado.setText('Resultado: {0}'.format(self.maquina.start(fita, instrucoes)))
 		else:
 			self.texto_resultado.setText('Entrada de fita vazia')
 
-	def passoapasso(self):
-		# TODO: Execução passo a passo
-		pass
-
+	def exec_passoapasso(self):
+		fita, instrucoes = self.recolher_dados()
+		self.maquina_passoapasso.run(fita, instrucoes)
 
 	def gerar_instrucao(self):
 		lista_instrucoes = instrucoes.multiplicacao
-		self.tabela.setRowCount(len(lista_instrucoes)+1)
+		self.tabela.setRowCount(len(lista_instrucoes) + 1)
 		self.tabela.clear()
 		cont = int(1)
 		for instrucao in lista_instrucoes:
 			chave = lista_instrucoes[instrucao]
-			self.tabela.setItem(cont,0,QTableWidgetItem(instrucao[0]))
-			self.tabela.setItem(cont,1,QTableWidgetItem(instrucao[1]))
-			self.tabela.setItem(cont,2,QTableWidgetItem(chave[0]))
-			self.tabela.setItem(cont,3,QTableWidgetItem(chave[1]))
-			self.tabela.setItem(cont,4,QTableWidgetItem(chave[2]))
-			cont = cont+1
+			self.tabela.setItem(cont, 0, QTableWidgetItem(instrucao[0]))
+			self.tabela.setItem(cont, 1, QTableWidgetItem(instrucao[1]))
+			self.tabela.setItem(cont, 2, QTableWidgetItem(chave[0]))
+			self.tabela.setItem(cont, 3, QTableWidgetItem(chave[1]))
+			self.tabela.setItem(cont, 4, QTableWidgetItem(chave[2]))
+			cont = cont + 1
 
 	def run(self):
 		self.show()
@@ -140,11 +148,32 @@ class Executar(QWidget):
 	def __init__(self):
 		QWidget.__init__(self)
 		self.setWindowTitle('Executar')
-		self.setMinimumWidth(200)
-		self.fita = QTableWidget(2,100)
+		self.setMinimumWidth(600)
+		self.fita = None
+		self.instrucoes = None
+		self.tabela_fita = QTableWidget(2, 100)
+		for i in range(self.tabela_fita.columnCount()):
+			self.tabela_fita.setColumnWidth(i, 20)
+
+		self.botao_proximopasso = QPushButton('Próximo passo')
+		self.botao_passoapasso_1s = QPushButton('Resumir processo (1s/passo)')
+
+		self.caixa_execucao = QHBoxLayout()
+		self.caixa_execucao.addWidget(self.botao_proximopasso)
+		self.caixa_execucao.addWidget(self.botao_passoapasso_1s)
+
 		layout = QVBoxLayout()
-		layout.addWidget(self.fita)
+		layout.addWidget(self.tabela_fita)
+		layout.addLayout(self.caixa_execucao)
 		self.setLayout(layout)
+
+	def run(self, fita, instrucoes):
+		self.fita = list(fita)
+		self.instrucoes = instrucoes
+		self.show()
+
+		for i in range(len(fita)):
+			self.tabela_fita.setItem(0, i, QTableWidgetItem(self.fita[i]))
 
 
 Window().run()
