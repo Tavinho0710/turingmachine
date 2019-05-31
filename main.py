@@ -6,7 +6,7 @@ import sys
 import turingmachine
 
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, \
-	QTableWidget, QTableWidgetItem
+	QTableWidget, QTableWidgetItem, QAbstractScrollArea
 
 qt_app = QApplication(sys.argv)
 
@@ -66,10 +66,11 @@ class Window(QWidget):
 		self.setLayout(self.caixa_interface)
 
 	def tabela(self):
-		# TODO: botoes de adicionar ou excluir linhas
+		# TODO: botao de excluir linhas
 		self.tabela = QTableWidget()
 		botao_adicionarlinha = QPushButton('Adicionar Linha')
-		botao_excluirlinha = QPushButton('Excluir Linha')
+		botao_adicionarlinha.clicked.connect(self.adiciona_linha)
+		botao_excluirlinha = QPushButton('Excluir Linha Selecionada')
 		caixa_botoestabela = QHBoxLayout()
 		caixa_botoestabela.addWidget(botao_adicionarlinha)
 		caixa_botoestabela.addWidget(botao_excluirlinha)
@@ -86,6 +87,9 @@ class Window(QWidget):
 		self.tabela.setItem(0, 4, QTableWidgetItem('Direçao (E ou D)'))
 		self.tabela.setItem(1, 0, QTableWidgetItem('q0'))
 		self.tabela.setItem(1, 1, QTableWidgetItem('>'))
+
+	def adiciona_linha(self):
+		self.tabela.insertRow(self.tabela.rowCount())
 
 	def gerar_tabela(self):
 		lista_simbolos = self.entrada_simbolos.text().split(',')
@@ -159,16 +163,15 @@ class Executar(QWidget):
 		self.fita = None
 		self.instrucoes = None
 		self.maquina = turingmachine.TuringMachine()
-		self.tabela_fita = QTableWidget(2, 100)
+		self.tabela_fita = QTableWidget(2, 2)
 		self.tabela_fita.horizontalHeader().hide()
 		self.tabela_fita.verticalHeader().hide()
-		self.tabela_fita.setStyleSheet('font: 14pt')
-		for i in range(self.tabela_fita.columnCount()):
-			self.tabela_fita.setColumnWidth(i, 20)
-
+		self.tabela_fita.setDisabled(True)
+		self.tabela_fita.setStyleSheet('font: 12pt')
 		self.botao_proximopasso = QPushButton('Próximo passo')
-		self.botao_proximopasso.clicked.connect(self.proximoPasso)
+		self.botao_proximopasso.clicked.connect(self.proximo_passo)
 		self.botao_passoapasso_1s = QPushButton('Resumir processo (1s/passo)')
+		self.botao_passoapasso_1s.clicked.connect(self.passo_a_passo)
 
 		self.caixa_execucao = QHBoxLayout()
 		self.caixa_execucao.addWidget(self.botao_proximopasso)
@@ -178,28 +181,39 @@ class Executar(QWidget):
 		layout.addLayout(self.caixa_execucao)
 		self.setLayout(layout)
 
-	def proximoPasso(self):
+	def passo_a_passo(self):
+		estado_atual = None
+		while estado_atual != 'END':
+			estado_atual = self.proximo_passo()
+		# TODO: Função de delay 1 segundo
+
+	def proximo_passo(self):
 		fita, posicao_cabeca, estado_atual = self.maquina.operacao()
 		self.gerar_tabela()
-		self.tabela_fita.setItem(1, posicao_cabeca, QTableWidgetItem(estado_atual))
+		self.atualizar_dados(1, posicao_cabeca, estado_atual)
+		if estado_atual == 'END':
+			self.botao_proximopasso.setDisabled
+			self.botao_passoapasso_1s.setDisabled
+		return estado_atual
+
+	def atualizar_dados(self, linha, coluna, info):
+		self.tabela_fita.setItem(linha, coluna, QTableWidgetItem(info))
+		self.tabela_fita.setColumnWidth(coluna, 2)
 
 	def gerar_tabela(self):
 		self.tabela_fita.clearContents()
 		self.tabela_fita.setColumnCount(len(self.fita))
 		for i in range(len(self.fita)):
-			self.tabela_fita.setItem((0, i, QTableWidgetItem(self.fita[i])))
+			self.atualizar_dados(0, i, self.fita[i])
 
 	def run(self, fita, instrucoes):
 		self.fita = list(fita)
 		self.instrucoes = instrucoes
-		self.gerar_tabela()
-		self.instrucoes = instrucoes
 		self.maquina.limparMaquina()
 		self.maquina.entrada_info(self.fita, self.instrucoes)
+		self.gerar_tabela()
+		self.atualizar_dados(1, 0, 'q0')
 		self.show()
-		for i in range(len(fita)):
-			self.tabela_fita.setItem(0, i, QTableWidgetItem(self.fita[i]))
-		self.tabela_fita.setItem(1,0, QTableWidgetItem('q0'))
 
 
 Window().run()

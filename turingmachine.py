@@ -23,6 +23,8 @@ class TuringMachine(object):
 		return ''.join(self.fita)
 
 	def operacao(self):
+		if self.estado_atual == 'END':
+			return self.fita, self.posicao_cabeca, self.estado_atual
 		chave = (self.estado_atual, self.leitura_cabeca)
 		if chave in self.instrucoes:
 			instrucao = self.instrucoes[chave]
