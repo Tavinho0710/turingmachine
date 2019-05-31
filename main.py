@@ -77,6 +77,8 @@ class Window(QWidget):
 		self.caixa_interface.addWidget(self.tabela)
 		self.tabela.setColumnCount(5)
 		self.tabela.setRowCount(6)
+		self.tabela.verticalHeader().hide()
+		self.tabela.horizontalHeader().hide()
 		self.tabela.setItem(0, 0, QTableWidgetItem('Instrução'))
 		self.tabela.setItem(0, 1, QTableWidgetItem('Leitura'))
 		self.tabela.setItem(0, 2, QTableWidgetItem('Próximo passo'))
@@ -129,7 +131,12 @@ class Window(QWidget):
 		lista_instrucoes = instrucoes.multiplicacao
 		self.tabela.setRowCount(len(lista_instrucoes) + 1)
 		self.tabela.clear()
-		cont = int(1)
+		cont = 1
+		self.tabela.setItem(0, 0, QTableWidgetItem('Instrução'))
+		self.tabela.setItem(0, 1, QTableWidgetItem('Leitura'))
+		self.tabela.setItem(0, 2, QTableWidgetItem('Próximo passo'))
+		self.tabela.setItem(0, 3, QTableWidgetItem('Substituir'))
+		self.tabela.setItem(0, 4, QTableWidgetItem('Direçao (E ou D)'))
 		for instrucao in lista_instrucoes:
 			chave = lista_instrucoes[instrucao]
 			self.tabela.setItem(cont, 0, QTableWidgetItem(instrucao[0]))
@@ -151,29 +158,48 @@ class Executar(QWidget):
 		self.setMinimumWidth(600)
 		self.fita = None
 		self.instrucoes = None
+		self.maquina = turingmachine.TuringMachine()
 		self.tabela_fita = QTableWidget(2, 100)
+		self.tabela_fita.horizontalHeader().hide()
+		self.tabela_fita.verticalHeader().hide()
+		self.tabela_fita.setStyleSheet('font: 14pt')
 		for i in range(self.tabela_fita.columnCount()):
 			self.tabela_fita.setColumnWidth(i, 20)
 
 		self.botao_proximopasso = QPushButton('Próximo passo')
+		self.botao_proximopasso.clicked.connect(self.proximoPasso)
 		self.botao_passoapasso_1s = QPushButton('Resumir processo (1s/passo)')
 
 		self.caixa_execucao = QHBoxLayout()
 		self.caixa_execucao.addWidget(self.botao_proximopasso)
 		self.caixa_execucao.addWidget(self.botao_passoapasso_1s)
-
 		layout = QVBoxLayout()
 		layout.addWidget(self.tabela_fita)
 		layout.addLayout(self.caixa_execucao)
 		self.setLayout(layout)
 
+	def proximoPasso(self):
+		fita, posicao_cabeca, estado_atual = self.maquina.operacao()
+		self.gerar_tabela()
+		self.tabela_fita.setItem(1, posicao_cabeca, QTableWidgetItem(estado_atual))
+
+	def gerar_tabela(self):
+		self.tabela_fita.clearContents()
+		self.tabela_fita.setColumnCount(len(self.fita))
+		for i in range(len(self.fita)):
+			self.tabela_fita.setItem((0, i, QTableWidgetItem(self.fita[i])))
+
 	def run(self, fita, instrucoes):
 		self.fita = list(fita)
 		self.instrucoes = instrucoes
+		self.gerar_tabela()
+		self.instrucoes = instrucoes
+		self.maquina.limparMaquina()
+		self.maquina.entrada_info(self.fita, self.instrucoes)
 		self.show()
-
 		for i in range(len(fita)):
 			self.tabela_fita.setItem(0, i, QTableWidgetItem(self.fita[i]))
+		self.tabela_fita.setItem(1,0, QTableWidgetItem('q0'))
 
 
 Window().run()
