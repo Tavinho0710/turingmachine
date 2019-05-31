@@ -4,6 +4,7 @@
 import instrucoes
 import sys
 import turingmachine
+import time
 
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, \
 	QTableWidget, QTableWidgetItem
@@ -14,6 +15,9 @@ qt_app = QApplication(sys.argv)
 
 class Window(QWidget):
 	def __init__(self):
+		# TODO: painel lateral de instrucoes
+		# TODO: entrada da instrucao inicial
+
 		QWidget.__init__(self)
 		self.setWindowTitle('Turing Machine')
 		self.setMinimumHeight(600)
@@ -24,6 +28,12 @@ class Window(QWidget):
 		caixa_insirafita = QVBoxLayout()
 		caixa_insirafita.addWidget(texto_insirafita)
 		caixa_insirafita.addWidget(self.entrada_fita)
+		texto_insiraprimeirainstrucao = QLabel('Insira a primeira instrução:')
+		self.entrada_primeirainstrucao = QLineEdit(self)
+		self.entrada_primeirainstrucao.setText('q0')
+		caixa_primeirainstrucao = QVBoxLayout()
+		caixa_primeirainstrucao.addWidget(texto_insiraprimeirainstrucao)
+		caixa_primeirainstrucao.addWidget(self.entrada_primeirainstrucao)
 		texto_listasimbolos = QLabel('Insira aqui a lista de simbolos separados por vírgula:')
 		self.entrada_simbolos = QLineEdit(self)
 		caixa_listasimbolos = QHBoxLayout()
@@ -44,8 +54,11 @@ class Window(QWidget):
 		caixa_definesimbolos.addLayout(caixa_passos)
 		caixa_definesimbolos.addWidget(gerar_tabela)
 
+		caixa_entradas = QVBoxLayout()
+		caixa_entradas.addLayout(caixa_insirafita)
+		caixa_entradas.addLayout(caixa_primeirainstrucao)
 		caixa_configuracoes = QHBoxLayout()
-		caixa_configuracoes.addLayout(caixa_insirafita)
+		caixa_configuracoes.addLayout(caixa_entradas)
 		caixa_configuracoes.addLayout(caixa_definesimbolos)
 
 		self.caixa_interface = QVBoxLayout()
@@ -171,6 +184,9 @@ class Window(QWidget):
 
 class Executar(QWidget):
 	def __init__(self):
+		# TODO: Histórico de instruções
+		# TODO: Botões de velocidade e pausa da thread
+
 		QWidget.__init__(self)
 		self.setWindowTitle('Executar')
 		self.setMinimumWidth(800)
@@ -180,13 +196,11 @@ class Executar(QWidget):
 		self.tabela_fita = QTableWidget(2, 2)
 		self.tabela_fita.horizontalHeader().hide()
 		self.tabela_fita.verticalHeader().hide()
-		self.tabela_fita.setDisabled(True)
 		self.tabela_fita.setStyleSheet('font: 12pt')
 		self.botao_proximopasso = QPushButton('Próximo passo')
 		self.botao_proximopasso.clicked.connect(self.proximo_passo)
 		self.botao_passoapasso_1s = QPushButton('Resumir processo (1s/passo)')
 		self.botao_passoapasso_1s.clicked.connect(self.passo_a_passo)
-
 		self.caixa_execucao = QHBoxLayout()
 		self.caixa_execucao.addWidget(self.botao_proximopasso)
 		self.caixa_execucao.addWidget(self.botao_passoapasso_1s)
@@ -196,10 +210,15 @@ class Executar(QWidget):
 		self.setLayout(layout)
 
 	def passo_a_passo(self):
+		t = Thread(target=self.passo_a_passo_thread)
+		t.start()
+
+	def passo_a_passo_thread(self):
 		estado_atual = None
 		while estado_atual != 'END':
+			qt_app.processEvents()
 			estado_atual = self.proximo_passo()
-		# TODO: Função de delay 1 segundo
+			time.sleep(1)
 
 	def proximo_passo(self):
 		fita, posicao_cabeca, estado_atual = self.maquina.operacao()
