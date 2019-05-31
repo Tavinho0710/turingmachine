@@ -6,7 +6,8 @@ import sys
 import turingmachine
 
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, \
-	QTableWidget, QTableWidgetItem, QAbstractScrollArea
+	QTableWidget, QTableWidgetItem
+from threading import Thread
 
 qt_app = QApplication(sys.argv)
 
@@ -17,7 +18,7 @@ class Window(QWidget):
 		self.setWindowTitle('Turing Machine')
 		self.setMinimumHeight(600)
 		self.maquina_passoapasso = Executar()
-		self.maquina = turingmachine.TuringMachine
+		self.maquina = turingmachine.TuringMachine()
 		texto_insirafita = QLabel('Insira a fita aqui:', self)
 		self.entrada_fita = QLineEdit(self)
 		caixa_insirafita = QVBoxLayout()
@@ -129,13 +130,20 @@ class Window(QWidget):
 	def exec_direto(self):
 		fita, instrucoes = self.recolher_dados()
 		if fita is not '':
-			self.texto_resultado.setText('Resultado: {0}'.format(self.maquina.start(fita, instrucoes)))
+			try:
+				self.maquina.entrada_info(list(fita), instrucoes)
+				self.texto_resultado.setText('Resultado: {0}'.format(self.maquina.start()))
+			except Exception as e:
+				self.texto_resultado.setText('Erro: {}'.format(e))
 		else:
 			self.texto_resultado.setText('Entrada de fita vazia')
 
 	def exec_passoapasso(self):
 		fita, instrucoes = self.recolher_dados()
-		self.maquina_passoapasso.run(fita, instrucoes)
+		if fita is not '':
+			self.maquina_passoapasso.run(fita, instrucoes)
+		else:
+			self.texto_resultado.setText('Entrada de fita vazia')
 
 	def gerar_instrucao(self):
 		lista_instrucoes = instrucoes.multiplicacao
@@ -165,7 +173,7 @@ class Executar(QWidget):
 	def __init__(self):
 		QWidget.__init__(self)
 		self.setWindowTitle('Executar')
-		self.setMinimumWidth(600)
+		self.setMinimumWidth(800)
 		self.fita = None
 		self.instrucoes = None
 		self.maquina = turingmachine.TuringMachine()
@@ -215,7 +223,7 @@ class Executar(QWidget):
 	def run(self, fita, instrucoes):
 		self.fita = list(fita)
 		self.instrucoes = instrucoes
-		self.maquina.limparMaquina()
+		self.maquina.limpar_maquina()
 		self.maquina.entrada_info(self.fita, self.instrucoes)
 		self.gerar_tabela()
 		self.atualizar_dados(1, 0, 'q0')
