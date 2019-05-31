@@ -66,11 +66,11 @@ class Window(QWidget):
 		self.setLayout(self.caixa_interface)
 
 	def tabela(self):
-		# TODO: botao de excluir linhas
 		self.tabela = QTableWidget()
 		botao_adicionarlinha = QPushButton('Adicionar Linha')
 		botao_adicionarlinha.clicked.connect(self.adiciona_linha)
 		botao_excluirlinha = QPushButton('Excluir Linha Selecionada')
+		botao_excluirlinha.clicked.connect(self.excluir_linha)
 		caixa_botoestabela = QHBoxLayout()
 		caixa_botoestabela.addWidget(botao_adicionarlinha)
 		caixa_botoestabela.addWidget(botao_excluirlinha)
@@ -88,8 +88,14 @@ class Window(QWidget):
 		self.tabela.setItem(1, 0, QTableWidgetItem('q0'))
 		self.tabela.setItem(1, 1, QTableWidgetItem('>'))
 
+	def excluir_linha(self):
+		self.tabela.removeRow(self.tabela.currentRow())
+
 	def adiciona_linha(self):
-		self.tabela.insertRow(self.tabela.rowCount())
+		if self.tabela.currentRow():
+			self.tabela.insertRow(self.tabela.currentRow()+1)
+		else:
+			self.tabela.insertRow(self.tabela.rowCount())
 
 	def gerar_tabela(self):
 		lista_simbolos = self.entrada_simbolos.text().split(',')
