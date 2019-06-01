@@ -94,13 +94,6 @@ class Window(QWidget):
 		self.tabela.setRowCount(6)
 		self.tabela.verticalHeader().hide()
 		self.tabela.horizontalHeader().hide()
-		self.tabela.setItem(0, 0, QTableWidgetItem('Instrução'))
-		self.tabela.setItem(0, 1, QTableWidgetItem('Leitura'))
-		self.tabela.setItem(0, 2, QTableWidgetItem('Próximo passo'))
-		self.tabela.setItem(0, 3, QTableWidgetItem('Substituir'))
-		self.tabela.setItem(0, 4, QTableWidgetItem('Direçao (E ou D)'))
-		self.tabela.setItem(1, 0, QTableWidgetItem('q0'))
-		self.tabela.setItem(1, 1, QTableWidgetItem('>'))
 
 	def excluir_linha(self):
 		self.tabela.removeRow(self.tabela.currentRow())
@@ -112,6 +105,7 @@ class Window(QWidget):
 			self.tabela.insertRow(self.tabela.rowCount())
 
 	def gerar_tabela(self):
+		self.limpar_tabela()
 		lista_simbolos = self.entrada_simbolos.text().split(',')
 		passos = int(self.entrada_passos.text())
 		self.tabela.setRowCount((passos * len(lista_simbolos)) + 1)
@@ -122,23 +116,37 @@ class Window(QWidget):
 				self.tabela.setItem((cont), 1, QTableWidgetItem(('{}'.format(lista_simbolos[j]))))
 				cont = cont + 1
 
+	def limpar_tabela(self):
+		self.tabela.clear()
+		self.tabela.setItem(0, 0, QTableWidgetItem('Instrução'))
+		self.tabela.setItem(0, 1, QTableWidgetItem('Leitura'))
+		self.tabela.setItem(0, 2, QTableWidgetItem('Próximo passo'))
+		self.tabela.setItem(0, 3, QTableWidgetItem('Substituir'))
+		self.tabela.setItem(0, 4, QTableWidgetItem('Direçao (E ou D)'))
+		self.tabela.setItem(1, 0, QTableWidgetItem('q0'))
+		self.tabela.setItem(1, 1, QTableWidgetItem('>'))
+
 	def recolher_dados(self):
-		# TODO: descartar linhas não preenchidas
 
 		instrucoes = {}
 		colunas = 5
 		linhas = self.tabela.rowCount()
 		for linha in range(1, linhas):
-			chave = ()
 			lista_chave = []
 			instrucao = []
+			valido = True
 			for coluna in range(colunas):
-				if coluna < 2:
-					lista_chave.append((self.tabela.item(linha, coluna)).text())
+				if self.tabela.item(linha, coluna) and self.tabela.item(linha, coluna).text():
+					if coluna < 2:
+						lista_chave.append((self.tabela.item(linha, coluna)).text())
+					else:
+						instrucao.append((self.tabela.item(linha, coluna)).text())
 				else:
-					instrucao.append((self.tabela.item(linha, coluna)).text())
+					valido = False
+					continue
 			chave = tuple(lista_chave)
-			instrucoes[chave] = instrucao
+			if valido:
+				instrucoes[chave] = instrucao
 		fita = self.entrada_fita.text()
 		instrucao_inicial = self.entrada_primeirainstrucao.text()
 		return fita, instrucoes, instrucao_inicial
@@ -164,13 +172,8 @@ class Window(QWidget):
 	def gerar_instrucao(self):
 		lista_instrucoes = instrucoes.multiplicacao
 		self.tabela.setRowCount(len(lista_instrucoes) + 1)
-		self.tabela.clear()
+		self.limpar_tabela()
 		cont = 1
-		self.tabela.setItem(0, 0, QTableWidgetItem('Instrução'))
-		self.tabela.setItem(0, 1, QTableWidgetItem('Leitura'))
-		self.tabela.setItem(0, 2, QTableWidgetItem('Próximo passo'))
-		self.tabela.setItem(0, 3, QTableWidgetItem('Substituir'))
-		self.tabela.setItem(0, 4, QTableWidgetItem('Direçao (E ou D)'))
 		for instrucao in lista_instrucoes:
 			chave = lista_instrucoes[instrucao]
 			self.tabela.setItem(cont, 0, QTableWidgetItem(instrucao[0]))
@@ -191,7 +194,6 @@ class Executar(QWidget):
 		# TODO: Botões de velocidade e pausa da thread
 
 		QWidget.__init__(self)
-		self.t = Thread(target=self.passo_a_passo_thread)
 		self.setWindowTitle('Executar')
 		self.setMinimumWidth(800)
 		self.fita = None
@@ -214,7 +216,11 @@ class Executar(QWidget):
 		self.setLayout(layout)
 
 	def passo_a_passo(self):
-		self.t.start()
+		self.t = Thread(target=self.passo_a_passo_thread)
+		if self.t.isAlive():
+			pass
+		else:
+			self.t.start()
 
 	def passo_a_passo_thread(self):
 		estado_atual = None
