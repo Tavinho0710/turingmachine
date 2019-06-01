@@ -1,22 +1,22 @@
 # Máquina de turing para trabalho de 6 fase de Ciência da Computação
 # Autor: Gustavo Niehues
 
-import instrucoes
 import sys
-import turingmachine
 import time
+from threading import Thread
 
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, \
 	QTableWidget, QTableWidgetItem
-from threading import Thread
+
+import instrucoes
+import turingmachine
 
 qt_app = QApplication(sys.argv)
 
 
 class Window(QWidget):
 	def __init__(self):
-		# TODO: painel lateral de instrucoes
-		# TODO: entrada da instrucao inicial
+		# TODO: painel lateral de guia de uso
 
 		QWidget.__init__(self)
 		self.setWindowTitle('Turing Machine')
@@ -123,6 +123,8 @@ class Window(QWidget):
 				cont = cont + 1
 
 	def recolher_dados(self):
+		# TODO: descartar linhas não preenchidas
+
 		instrucoes = {}
 		colunas = 5
 		linhas = self.tabela.rowCount()
@@ -138,13 +140,14 @@ class Window(QWidget):
 			chave = tuple(lista_chave)
 			instrucoes[chave] = instrucao
 		fita = self.entrada_fita.text()
-		return fita, instrucoes
+		instrucao_inicial = self.entrada_primeirainstrucao.text()
+		return fita, instrucoes, instrucao_inicial
 
 	def exec_direto(self):
-		fita, instrucoes = self.recolher_dados()
+		fita, instrucoes, instrucao_inicial = self.recolher_dados()
 		if fita is not '':
 			try:
-				self.maquina.entrada_info(list(fita), instrucoes)
+				self.maquina.entrada_info(list(fita), instrucoes, instrucao_inicial)
 				self.texto_resultado.setText('Resultado: {0}'.format(self.maquina.start()))
 			except Exception as e:
 				self.texto_resultado.setText('Erro: {}'.format(e))
@@ -152,9 +155,9 @@ class Window(QWidget):
 			self.texto_resultado.setText('Entrada de fita vazia')
 
 	def exec_passoapasso(self):
-		fita, instrucoes = self.recolher_dados()
+		fita, instrucoes, instrucao_inicial = self.recolher_dados()
 		if fita is not '':
-			self.maquina_passoapasso.run(fita, instrucoes)
+			self.maquina_passoapasso.run(fita, instrucoes, instrucao_inicial)
 		else:
 			self.texto_resultado.setText('Entrada de fita vazia')
 
@@ -188,6 +191,7 @@ class Executar(QWidget):
 		# TODO: Botões de velocidade e pausa da thread
 
 		QWidget.__init__(self)
+		self.t = Thread(target=self.passo_a_passo_thread)
 		self.setWindowTitle('Executar')
 		self.setMinimumWidth(800)
 		self.fita = None
@@ -210,15 +214,14 @@ class Executar(QWidget):
 		self.setLayout(layout)
 
 	def passo_a_passo(self):
-		t = Thread(target=self.passo_a_passo_thread)
-		t.start()
+		self.t.start()
 
 	def passo_a_passo_thread(self):
 		estado_atual = None
 		while estado_atual != 'END':
 			qt_app.processEvents()
 			estado_atual = self.proximo_passo()
-			time.sleep(1)
+			time.sleep(0.5)
 
 	def proximo_passo(self):
 		fita, posicao_cabeca, estado_atual = self.maquina.operacao()
@@ -239,13 +242,13 @@ class Executar(QWidget):
 		for i in range(len(self.fita)):
 			self.atualizar_dados(0, i, self.fita[i])
 
-	def run(self, fita, instrucoes):
+	def run(self, fita, instrucoes, instrucao_inicial):
 		self.fita = list(fita)
 		self.instrucoes = instrucoes
 		self.maquina.limpar_maquina()
-		self.maquina.entrada_info(self.fita, self.instrucoes)
+		self.maquina.entrada_info(self.fita, self.instrucoes, instrucao_inicial)
 		self.gerar_tabela()
-		self.atualizar_dados(1, 0, 'q0')
+		self.atualizar_dados(1, 0, instrucao_inicial)
 		self.show()
 
 

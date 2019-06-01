@@ -3,13 +3,14 @@ class TuringMachine(object):
 		self.fita = None
 		self.instrucoes = None
 		self.leitura_cabeca = None
-		self.estado_atual = 'q0'
+		self.estado_atual = ''
 		self.posicao_cabeca = 0
 
-	def entrada_info(self, fita, instrucoes):
+	def entrada_info(self, fita, instrucoes, instrucao_inicial):
 		self.limpar_maquina()
 		self.instrucoes = instrucoes
 		self.fita = fita
+		self.estado_atual = instrucao_inicial
 		self.leitura_cabeca = self.fita[0]
 
 	def start(self):
@@ -44,6 +45,6 @@ class TuringMachine(object):
 	def limpar_maquina(self):
 		self.fita = None
 		self.instrucoes = None
-		self.estado_atual = 'q0'
+		self.estado_atual = ''
 		self.posicao_cabeca = 0
 		self.leitura_cabeca = 0
