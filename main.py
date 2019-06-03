@@ -63,7 +63,9 @@ class Window(QWidget):
 
 		self.caixa_interface = QVBoxLayout()
 		self.caixa_interface.addLayout(caixa_configuracoes)
+
 		self.tabela()
+
 		botao_passoapasso = QPushButton('Execução passo a passo')
 		botao_passoapasso.clicked.connect(self.exec_passoapasso)
 		botao_direto = QPushButton('Execução direta')
@@ -76,11 +78,32 @@ class Window(QWidget):
 		self.texto_resultado.setStyleSheet('font: 14pt')
 		self.caixa_interface.addWidget(self.texto_resultado)
 		self.gerar_instrucao()
-		self.caixa_observacoes = QVBoxLayout()
-		self.setLayout(self.caixa_interface)
+
+		observacao1 = QLabel('Instruções de uso:')
+		observacao1.setWordWrap(True)
+		observacao2 = QLabel('1) Para o funcionamento da máquina, cada linha de instrução utilizada deve ser '
+		                     'totalmente preenchida.')
+		observacao2.setWordWrap(True)
+		observacao3 = QLabel('2) Para casos de uso de espaços em instruções, clique no campo e dê um espaço,'
+		                     ' não deixe em branco')
+		observacao3.setWordWrap(True)
+
+		texto_geracao = QLabel('Instruções gravadas')
+		botao_soma = QPushButton('Adição')
+
+		caixa_observacoes = QVBoxLayout()
+		caixa_observacoes.addWidget(observacao1)
+		caixa_observacoes.addWidget(observacao2)
+		caixa_observacoes.addWidget(observacao3)
+		caixa_geral = QHBoxLayout()
+		caixa_geral.addLayout(self.caixa_interface, 3)
+		caixa_geral.addLayout(caixa_observacoes)
+
+		self.setLayout(caixa_geral)
 
 	def tabela(self):
 		self.tabela = QTableWidget()
+		self.tabela.setHorizontalHeaderItem(0, QTableWidgetItem('Instrução'))
 		botao_adicionarlinha = QPushButton('Adicionar Linha')
 		botao_adicionarlinha.clicked.connect(self.adiciona_linha)
 		botao_excluirlinha = QPushButton('Excluir Linha Selecionada')
@@ -93,14 +116,16 @@ class Window(QWidget):
 		self.tabela.setColumnCount(5)
 		self.tabela.setRowCount(6)
 		self.tabela.verticalHeader().hide()
-		self.tabela.horizontalHeader().hide()
 
 	def excluir_linha(self):
-		self.tabela.removeRow(self.tabela.currentRow())
+		if self.tabela.currentRow():
+			self.tabela.removeRow(self.tabela.currentRow())
+		else:
+			self.tabela.removeRow(self.tabela.rowCount())
 
 	def adiciona_linha(self):
 		if self.tabela.currentRow():
-			self.tabela.insertRow(self.tabela.currentRow()+1)
+			self.tabela.insertRow(self.tabela.currentRow() + 1)
 		else:
 			self.tabela.insertRow(self.tabela.rowCount())
 
@@ -109,7 +134,7 @@ class Window(QWidget):
 		lista_simbolos = self.entrada_simbolos.text().split(',')
 		passos = int(self.entrada_passos.text())
 		self.tabela.setRowCount((passos * len(lista_simbolos)) + 1)
-		cont = 1
+		cont = 0
 		for i in range(passos):
 			for j in range(len(lista_simbolos)):
 				self.tabela.setItem((cont), 0, QTableWidgetItem(('q{}'.format(i))))
@@ -118,20 +143,24 @@ class Window(QWidget):
 
 	def limpar_tabela(self):
 		self.tabela.clear()
-		self.tabela.setItem(0, 0, QTableWidgetItem('Instrução'))
-		self.tabela.setItem(0, 1, QTableWidgetItem('Leitura'))
-		self.tabela.setItem(0, 2, QTableWidgetItem('Próximo passo'))
-		self.tabela.setItem(0, 3, QTableWidgetItem('Substituir'))
-		self.tabela.setItem(0, 4, QTableWidgetItem('Direçao (E ou D)'))
-		self.tabela.setItem(1, 0, QTableWidgetItem('q0'))
-		self.tabela.setItem(1, 1, QTableWidgetItem('>'))
+		self.tabela.setHorizontalHeaderLabels(['Instrução', 'Leitura', 'Próximo Passo', 'Substituir', 'Direção '
+		                                                                                              '(E ou D)'])
+		print(self.tabela.horizontalHeaderItem(0))
+
+	# self.tabela.setItem(0, 0, QTableWidgetItem('Instrução'))
+	# self.tabela.setItem(0, 1, QTableWidgetItem('Leitura'))
+	# self.tabela.setItem(0, 2, QTableWidgetItem('Próximo passo'))
+	# self.tabela.setItem(0, 3, QTableWidgetItem('Substituir'))
+	# self.tabela.setItem(0, 4, QTableWidgetItem('Direçao (E ou D)'))
+	# self.tabela.setItem(1, 0, QTableWidgetItem('q0'))
+	# self.tabela.setItem(1, 1, QTableWidgetItem('>'))
 
 	def recolher_dados(self):
 
 		instrucoes = {}
 		colunas = 5
 		linhas = self.tabela.rowCount()
-		for linha in range(1, linhas):
+		for linha in range(0, linhas):
 			lista_chave = []
 			instrucao = []
 			valido = True
@@ -173,7 +202,7 @@ class Window(QWidget):
 		lista_instrucoes = instrucoes.multiplicacao
 		self.tabela.setRowCount(len(lista_instrucoes) + 1)
 		self.limpar_tabela()
-		cont = 1
+		cont = 0
 		for instrucao in lista_instrucoes:
 			chave = lista_instrucoes[instrucao]
 			self.tabela.setItem(cont, 0, QTableWidgetItem(instrucao[0]))
