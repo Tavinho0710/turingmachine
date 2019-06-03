@@ -16,7 +16,6 @@ qt_app = QApplication(sys.argv)
 
 class Window(QWidget):
 	def __init__(self):
-		# TODO: painel lateral de guia de uso
 
 		QWidget.__init__(self)
 		self.setWindowTitle('Turing Machine')
@@ -76,30 +75,55 @@ class Window(QWidget):
 		self.caixa_interface.addLayout(caixa_execucao)
 		self.texto_resultado = QLabel('')
 		self.texto_resultado.setStyleSheet('font: 14pt')
-		self.caixa_interface.addWidget(self.texto_resultado)
-		self.gerar_instrucao()
 
 		observacao1 = QLabel('Instruções de uso:')
 		observacao1.setWordWrap(True)
 		observacao2 = QLabel('1) Para o funcionamento da máquina, cada linha de instrução utilizada deve ser '
 		                     'totalmente preenchida.')
 		observacao2.setWordWrap(True)
+		observacao5 = QLabel('2) Toda linha com células não preenchidas será descartada, sem necessidade de remoção'
+		                     ' manual')
+		observacao5.setWordWrap(True)
 		observacao3 = QLabel('2) Para casos de uso de espaços em instruções, clique no campo e dê um espaço,'
-		                     ' não deixe em branco')
+		                     ' não deixe em branco.')
 		observacao3.setWordWrap(True)
+		observacao4 = QLabel('3) Para a máquina detectar estado de parada, deve-se colocar \'END\' no campo de próximo '
+		                     'passo da instrução final.')
+		observacao4.setWordWrap(True)
 
 		texto_geracao = QLabel('Instruções gravadas')
 		botao_soma = QPushButton('Adição')
+		botao_soma.clicked.connect(lambda: self.gerar_instrucao(instrucoes.soma))
+		botao_subtracao = QPushButton('Subtração')
+		botao_subtracao.clicked.connect(lambda: self.gerar_instrucao(instrucoes.subtracao))
+		botao_multiplicacao = QPushButton('Multiplicação')
+		botao_multiplicacao.clicked.connect(lambda: self.gerar_instrucao(instrucoes.multiplicacao))
+		botao_divisao = QPushButton('Divisão')
+		botao_divisao.clicked.connect(lambda: self.gerar_instrucao(instrucoes.divisao))
 
-		caixa_observacoes = QVBoxLayout()
-		caixa_observacoes.addWidget(observacao1)
-		caixa_observacoes.addWidget(observacao2)
-		caixa_observacoes.addWidget(observacao3)
+		caixa_instrucoes = QVBoxLayout()
+		caixa_instrucoes.addWidget(texto_geracao)
+		caixa_instrucoes.addWidget(botao_soma)
+		caixa_instrucoes.addWidget(botao_subtracao)
+		caixa_instrucoes.addWidget(botao_multiplicacao)
+		caixa_instrucoes.addWidget(botao_divisao)
+
+		caixa_barralateral = QVBoxLayout()
+		caixa_barralateral.addWidget(observacao1)
+		caixa_barralateral.addWidget(observacao5)
+		caixa_barralateral.addWidget(observacao2)
+		caixa_barralateral.addWidget(observacao3)
+		caixa_barralateral.addWidget(observacao4)
+		caixa_barralateral.addLayout(caixa_instrucoes)
+
 		caixa_geral = QHBoxLayout()
 		caixa_geral.addLayout(self.caixa_interface, 3)
-		caixa_geral.addLayout(caixa_observacoes)
+		caixa_geral.addLayout(caixa_barralateral)
 
-		self.setLayout(caixa_geral)
+		caixa_resultado = QVBoxLayout()
+		caixa_resultado.addLayout(caixa_geral)
+		caixa_resultado.addWidget(self.texto_resultado)
+		self.setLayout(caixa_resultado)
 
 	def tabela(self):
 		self.tabela = QTableWidget()
@@ -133,27 +157,19 @@ class Window(QWidget):
 		self.limpar_tabela()
 		lista_simbolos = self.entrada_simbolos.text().split(',')
 		passos = int(self.entrada_passos.text())
-		self.tabela.setRowCount((passos * len(lista_simbolos)) + 1)
+		self.tabela.setRowCount((passos * len(lista_simbolos)))
 		cont = 0
 		for i in range(passos):
 			for j in range(len(lista_simbolos)):
-				self.tabela.setItem((cont), 0, QTableWidgetItem(('q{}'.format(i))))
-				self.tabela.setItem((cont), 1, QTableWidgetItem(('{}'.format(lista_simbolos[j]))))
+				self.tabela.setItem(cont, 0, QTableWidgetItem(('q{}'.format(i))))
+				self.tabela.setItem(cont, 1, QTableWidgetItem(('{}'.format(lista_simbolos[j]))))
 				cont = cont + 1
 
 	def limpar_tabela(self):
 		self.tabela.clear()
-		self.tabela.setHorizontalHeaderLabels(['Instrução', 'Leitura', 'Próximo Passo', 'Substituir', 'Direção '
-		                                                                                              '(E ou D)'])
+		hl = ['Instrução', 'Leitura', 'Próximo Passo', 'Substituir', 'Direção (E ou D)']
+		self.tabela.setHorizontalHeaderLabels(hl)
 		print(self.tabela.horizontalHeaderItem(0))
-
-	# self.tabela.setItem(0, 0, QTableWidgetItem('Instrução'))
-	# self.tabela.setItem(0, 1, QTableWidgetItem('Leitura'))
-	# self.tabela.setItem(0, 2, QTableWidgetItem('Próximo passo'))
-	# self.tabela.setItem(0, 3, QTableWidgetItem('Substituir'))
-	# self.tabela.setItem(0, 4, QTableWidgetItem('Direçao (E ou D)'))
-	# self.tabela.setItem(1, 0, QTableWidgetItem('q0'))
-	# self.tabela.setItem(1, 1, QTableWidgetItem('>'))
 
 	def recolher_dados(self):
 
@@ -198,13 +214,12 @@ class Window(QWidget):
 		else:
 			self.texto_resultado.setText('Entrada de fita vazia')
 
-	def gerar_instrucao(self):
-		lista_instrucoes = instrucoes.multiplicacao
-		self.tabela.setRowCount(len(lista_instrucoes) + 1)
+	def gerar_instrucao(self, instrucoes):
+		self.tabela.setRowCount(len(instrucoes) + 1)
 		self.limpar_tabela()
 		cont = 0
-		for instrucao in lista_instrucoes:
-			chave = lista_instrucoes[instrucao]
+		for instrucao in instrucoes:
+			chave = instrucoes[instrucao]
 			self.tabela.setItem(cont, 0, QTableWidgetItem(instrucao[0]))
 			self.tabela.setItem(cont, 1, QTableWidgetItem(instrucao[1]))
 			self.tabela.setItem(cont, 2, QTableWidgetItem(chave[0]))
