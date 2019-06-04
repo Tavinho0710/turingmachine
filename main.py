@@ -84,10 +84,10 @@ class Window(QWidget):
 		observacao5 = QLabel('2) Toda linha com células não preenchidas será descartada, sem necessidade de remoção'
 		                     ' manual')
 		observacao5.setWordWrap(True)
-		observacao3 = QLabel('2) Para casos de uso de espaços em instruções, clique no campo e dê um espaço,'
+		observacao3 = QLabel('3) Para casos de uso de espaços em instruções, clique no campo e dê um espaço,'
 		                     ' não deixe em branco.')
 		observacao3.setWordWrap(True)
-		observacao4 = QLabel('3) Para a máquina detectar estado de parada, deve-se colocar \'END\' no campo de próximo '
+		observacao4 = QLabel('4) Para a máquina detectar estado de parada, deve-se colocar \'END\' no campo de próximo '
 		                     'passo da instrução final.')
 		observacao4.setWordWrap(True)
 
@@ -139,6 +139,8 @@ class Window(QWidget):
 		self.caixa_interface.addWidget(self.tabela)
 		self.tabela.setColumnCount(5)
 		self.tabela.setRowCount(6)
+		hl = ['Instrução', 'Leitura', 'Próximo Passo', 'Substituir', 'Direção (E ou D)']
+		self.tabela.setHorizontalHeaderLabels(hl)
 		self.tabela.verticalHeader().hide()
 
 	def excluir_linha(self):
@@ -166,13 +168,9 @@ class Window(QWidget):
 				cont = cont + 1
 
 	def limpar_tabela(self):
-		self.tabela.clear()
-		hl = ['Instrução', 'Leitura', 'Próximo Passo', 'Substituir', 'Direção (E ou D)']
-		self.tabela.setHorizontalHeaderLabels(hl)
-		print(self.tabela.horizontalHeaderItem(0))
+		self.tabela.clearContents()
 
 	def recolher_dados(self):
-
 		instrucoes = {}
 		colunas = 5
 		linhas = self.tabela.rowCount()
