@@ -27,7 +27,7 @@ class Executar(QWidget):
 		self.tabela_fita.verticalHeader().hide()
 		self.tabela_fita.setStyleSheet('font: 12pt')
 		self.botao_proximopasso = QPushButton('Próximo passo')
-		self.botao_proximopasso.clicked.connect(self.proximo_passo)
+		self.botao_proximopasso.clicked.connect(self.receber)
 		self.botao_passoapasso_1s = QPushButton('Resumir processo (1s/passo)')
 		self.botao_passoapasso_1s.clicked.connect(self.passo_a_passo)
 		self.caixa_execucao = QHBoxLayout()
@@ -71,23 +71,46 @@ class Executar(QWidget):
 		for i in range(len(self.fita)):
 			self.atualizar_dados(0, i, self.fita[i])
 
-	def run(self):
-		qt_app.exec_()
+	def receber(self):
 		host, porta = 'localhost', 8888
-		cliente = None
+
 		while True:
 			with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
-				conexao.bind(host, porta)
+				conexao.bind((host, porta))
+				print(conexao.getsockname())
 				conexao.listen(1)
 				conn, cliente = conexao.accept()
-				data = conn.recv(16384)
-				self.fita, self.instrucoes, instrucao_inicial = json.loads(data)
+				print('Conectado a: ', cliente)
+				data = conn.recv(1024)
+				data.decode('utf-8')
+				self.fita = json.loads(data.decode('utf-8'))
+				print(self.fita)
+
+				conn, cliente = conexao.accept()
+				data = conn.recv(32)
+				n_instrucoes = json.loads(data.decode('utf-8'))
+
+				for i in range(n_instrucoes):
+					conn, cliente = conexao.accept()
+					linha = conn.recv(1024)
+					self.criar_instrucoes(linha.decode('utf-8'))
+
+				conn, cliente = conexao.accept()
+				data = conn.recv(256)
+				instrucao_inicial = json.loads(data.decode('utf-8'))
 				conn.close()
+
 			self.maquina.limpar_maquina()
 			self.maquina.entrada_info(self.fita, self.instrucoes, instrucao_inicial)
 			self.gerar_tabela()
 			self.atualizar_dados(1, 0, instrucao_inicial)
-			self.show()
+
+	def criar_instrucoes(self, linha):
+		print(linha)
+
+	def run(self):
+		self.show()
+		qt_app.exec_()
 
 
-Executar.run()
+Executar().run()
