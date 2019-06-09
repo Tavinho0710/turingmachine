@@ -26,11 +26,14 @@ class Executar(QWidget):
 		self.tabela_fita.horizontalHeader().hide()
 		self.tabela_fita.verticalHeader().hide()
 		self.tabela_fita.setStyleSheet('font: 12pt')
+		self.botao_receberdados = QPushButton('Receber Dados')
+		self.botao_receberdados.clicked.connect(self.receber)
 		self.botao_proximopasso = QPushButton('Próximo passo')
-		self.botao_proximopasso.clicked.connect(self.receber)
+		self.botao_proximopasso.clicked.connect(self.proximo_passo)
 		self.botao_passoapasso_1s = QPushButton('Resumir processo (1s/passo)')
 		self.botao_passoapasso_1s.clicked.connect(self.passo_a_passo)
 		self.caixa_execucao = QHBoxLayout()
+		self.caixa_execucao.addWidget(self.botao_receberdados)
 		self.caixa_execucao.addWidget(self.botao_proximopasso)
 		self.caixa_execucao.addWidget(self.botao_passoapasso_1s)
 		layout = QVBoxLayout()
@@ -50,7 +53,7 @@ class Executar(QWidget):
 		while estado_atual != 'END':
 			qt_app.processEvents()
 			estado_atual = self.proximo_passo()
-			time.sleep(0.5)
+			time.sleep(3)
 
 	def proximo_passo(self):
 		fita, posicao_cabeca, estado_atual = self.maquina.operacao()
@@ -73,30 +76,23 @@ class Executar(QWidget):
 
 	def receber(self):
 		host, porta = 'localhost', 8888
+		self.instrucoes = {}
+		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
+			conexao.bind((host, porta))
+			print(conexao.getsockname())
+			conexao.listen(1)
+			conn, cliente = conexao.accept()
+			print('Conectado a: ', cliente)
+			data = conn.recv(16384)
+			self.fita, instrucoes, instrucao_inicial = json.loads(data.decode())
+			for i in instrucoes:
+				self.criar_instrucoes(i)
+			conn.close()
 
-		while True:
-			self.instrucoes = {}
-			with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
-				conexao.bind((host, porta))
-				print(conexao.getsockname())
-				conexao.listen(1)
-				conn, cliente = conexao.accept()
-				print('Conectado a: ', cliente)
-				data = conn.recv(16384)
-				self.fita, instrucoes, instrucao_inicial = json.loads(data.decode())
-				for i in instrucoes:
-					self.criar_instrucoes(i)
-				conn.close()
-
-			self.maquina.limpar_maquina()
-			self.maquina.entrada_info(list(self.fita), self.instrucoes, instrucao_inicial)
-			self.gerar_tabela()
-			self.atualizar_dados(1, 0, instrucao_inicial)
-			estado_atual = None
-			while estado_atual != 'END':
-				qt_app.processEvents()
-				estado_atual = self.proximo_passo()
-				time.sleep(0.5)
+		self.maquina.limpar_maquina()
+		self.maquina.entrada_info(list(self.fita), self.instrucoes, instrucao_inicial)
+		self.gerar_tabela()
+		self.atualizar_dados(1, 0, instrucao_inicial)
 
 	def criar_instrucoes(self, linha):
 		chave = (linha[0], linha[1])
