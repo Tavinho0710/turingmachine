@@ -15,23 +15,23 @@ class TuringMachine(object):
 
 	def start(self):
 		self.leitura_cabeca = self.fita[0]
-		while self.estado_atual != 'END':
+		while self.estado_atual.upper() != 'END':
 			self.operacao()
 		while self.fita[0] == ' ':
 			self.fita.pop(0)
 		return ''.join(self.fita)
 
 	def operacao(self):
-		if self.estado_atual == 'END':
+		if self.estado_atual.upper() == 'END':
 			return self.fita, self.posicao_cabeca, self.estado_atual
 		chave = (self.estado_atual, self.leitura_cabeca)
 		if chave in self.instrucoes:
 			instrucao = self.instrucoes[chave]
 			self.estado_atual = instrucao[0]
 			self.fita[self.posicao_cabeca] = instrucao[1]
-			if instrucao[2] == 'D':
+			if instrucao[2].upper() == 'D':
 				self.posicao_cabeca += 1
-			elif instrucao[2] == 'E' and self.posicao_cabeca > 0:
+			elif instrucao[2].upper() == 'E' and self.posicao_cabeca > 0:
 				self.posicao_cabeca -= 1
 			else:
 				pass

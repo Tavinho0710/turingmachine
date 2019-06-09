@@ -66,9 +66,10 @@ class Window(QWidget):
 		self.tabela()
 
 		botao_passoapasso = QPushButton('Execução passo a passo')
-		botao_passoapasso.clicked.connect(self.exec_passoapasso)
 		botao_direto = QPushButton('Execução direta')
+		botao_passoapasso.clicked.connect(self.exec_passoapasso)
 		botao_direto.clicked.connect(self.exec_direto)
+
 		caixa_execucao = QHBoxLayout()
 		caixa_execucao.addWidget(botao_direto)
 		caixa_execucao.addWidget(botao_passoapasso)
@@ -147,7 +148,7 @@ class Window(QWidget):
 		if self.tabela.currentRow():
 			self.tabela.removeRow(self.tabela.currentRow())
 		else:
-			self.tabela.removeRow(self.tabela.rowCount())
+			self.tabela.removeRow(self.tabela.rowCount() - 1)
 
 	def adiciona_linha(self):
 		if self.tabela.currentRow():
@@ -156,19 +157,26 @@ class Window(QWidget):
 			self.tabela.insertRow(self.tabela.rowCount())
 
 	def gerar_tabela(self):
-		self.limpar_tabela()
-		lista_simbolos = self.entrada_simbolos.text().split(',')
-		passos = int(self.entrada_passos.text())
-		self.tabela.setRowCount((passos * len(lista_simbolos)))
-		cont = 0
-		for i in range(passos):
-			for j in range(len(lista_simbolos)):
-				self.tabela.setItem(cont, 0, QTableWidgetItem(('q{}'.format(i))))
-				self.tabela.setItem(cont, 1, QTableWidgetItem(('{}'.format(lista_simbolos[j]))))
-				cont = cont + 1
-
-	def limpar_tabela(self):
+		self.texto_resultado.clear()
 		self.tabela.clearContents()
+		try:
+			if self.entrada_simbolos.text() and self.entrada_passos.text():
+				lista_simbolos = self.entrada_simbolos.text().split(',')
+				try:
+					passos = int(self.entrada_passos.text())
+				except:
+					raise Exception('Valor para quantidade de passos deve ser inteiro')
+				self.tabela.setRowCount((passos * len(lista_simbolos)))
+				cont = 0
+				for i in range(passos):
+					for j in range(len(lista_simbolos)):
+						self.tabela.setItem(cont, 0, QTableWidgetItem(('q{}'.format(i))))
+						self.tabela.setItem(cont, 1, QTableWidgetItem(('{}'.format(lista_simbolos[j]))))
+						cont = cont + 1
+			else:
+				raise Exception('Um ou mais campos não estão preenchidos para a geração da tabela')
+		except Exception as e:
+			self.texto_resultado.setText('Erro: {}'.format(e))
 
 	def recolher_dados(self):
 		instrucoes = {}
@@ -195,26 +203,26 @@ class Window(QWidget):
 		return fita, instrucoes, instrucao_inicial
 
 	def exec_direto(self):
+		self.texto_resultado.clear()
 		fita, instrucoes, instrucao_inicial = self.recolher_dados()
-		if fita is not '':
-			try:
-				self.maquina.entrada_info(list(fita), instrucoes, instrucao_inicial)
-				self.texto_resultado.setText('Resultado: {0}'.format(self.maquina.start()))
-			except Exception as e:
-				self.texto_resultado.setText('Erro: {}'.format(e))
-		else:
-			self.texto_resultado.setText('Entrada de fita vazia')
+		try:
+			self.maquina.entrada_info(list(fita), instrucoes, instrucao_inicial)
+			self.texto_resultado.setText('Resultado: {0}'.format(self.maquina.start()))
+		except IndexError:
+			self.texto_resultado.setText('Erro: Fita não foi inserida')
+		except Exception as e:
+			self.texto_resultado.setText('Erro: {}'.format(e))
 
 	def exec_passoapasso(self):
 		fita, instrucoes, instrucao_inicial = self.recolher_dados()
-		if fita is not '':
+		try:
 			self.maquina_passoapasso.run(fita, instrucoes, instrucao_inicial)
-		else:
-			self.texto_resultado.setText('Entrada de fita vazia')
+		except Exception as e:
+			self.texto_resultado.setText('Erro: {}'.format(e))
 
 	def gerar_instrucao(self, instrucoes):
 		self.tabela.setRowCount(len(instrucoes) + 1)
-		self.limpar_tabela()
+		self.tabela.clearContents()
 		cont = 0
 		for instrucao in instrucoes:
 			chave = instrucoes[instrucao]
@@ -233,7 +241,6 @@ class Window(QWidget):
 class Executar(QWidget):
 	def __init__(self):
 		# TODO: Histórico de instruções
-		# TODO: Botões de velocidade e pausa da thread
 
 		QWidget.__init__(self)
 		self.setWindowTitle('Executar')
@@ -243,7 +250,7 @@ class Executar(QWidget):
 		self.maquina = turingmachine.TuringMachine()
 		self.tabela_fita = QTableWidget(2, 2)
 		self.tabela_fita.horizontalHeader().hide()
-		self.tabela_fita.verticalHeader().hide()
+		self.tabela_fita.setVerticalHeaderLabels(['Fita', 'Instrução'])
 		self.tabela_fita.setStyleSheet('font: 12pt')
 		self.botao_proximopasso = QPushButton('Próximo passo')
 		self.botao_proximopasso.clicked.connect(self.proximo_passo)
@@ -266,16 +273,17 @@ class Executar(QWidget):
 
 	def passo_a_passo_thread(self):
 		estado_atual = None
-		while estado_atual != 'END':
+		self.tempo = 0.5
+		while estado_atual.upper() != 'END':
 			qt_app.processEvents()
 			estado_atual = self.proximo_passo()
-			time.sleep(0.5)
+			time.sleep(self.tempo)
 
 	def proximo_passo(self):
 		fita, posicao_cabeca, estado_atual = self.maquina.operacao()
 		self.gerar_tabela()
 		self.atualizar_dados(1, posicao_cabeca, estado_atual)
-		if estado_atual == 'END':
+		if estado_atual.upper() == 'END':
 			self.botao_proximopasso.setDisabled
 			self.botao_passoapasso_1s.setDisabled
 		return estado_atual
