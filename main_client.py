@@ -208,26 +208,17 @@ class Window(QWidget):
 
 	def enviar(self, fita, instrucoes, instrucao_inicial):
 		server, porta = 'localhost', 8888
+		instrucoes_ = []
 		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
 			conexao.connect((server, porta))
-
-			data = json.dumps(fita)
-			print(data)
-			data = data.encode('utf-8')
-			conexao.send(data)
-
-			nInstrucoes = len(instrucoes)
-			data2 = json.dumps(nInstrucoes)
-			conexao.send(data2.encode('utf-8'))
 
 			for i in instrucoes:
 				instrucao = list(i)
 				instrucao.append(instrucoes[i])
-				data3 = json.dumps(instrucao)
-				conexao.send(data3.encode('utf-8'))
+				instrucoes_.append(instrucao)
 
-			data4 = json.dumps(instrucao_inicial)
-			conexao.send(data4.encode('utf-8'))
+			data = json.dumps([fita, instrucoes_, instrucao_inicial])
+			conexao.sendall(data.encode('utf-8'))
 			conexao.close()
 
 	def receber(self, data):

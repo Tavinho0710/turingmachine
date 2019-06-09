@@ -75,38 +75,33 @@ class Executar(QWidget):
 		host, porta = 'localhost', 8888
 
 		while True:
+			self.instrucoes = {}
 			with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
 				conexao.bind((host, porta))
 				print(conexao.getsockname())
 				conexao.listen(1)
 				conn, cliente = conexao.accept()
 				print('Conectado a: ', cliente)
-				data = conn.recv(1024)
-				data.decode('utf-8')
-				self.fita = json.loads(data.decode('utf-8'))
-				print(self.fita)
-
-				conn, cliente = conexao.accept()
-				data = conn.recv(32)
-				n_instrucoes = json.loads(data.decode('utf-8'))
-
-				for i in range(n_instrucoes):
-					conn, cliente = conexao.accept()
-					linha = conn.recv(1024)
-					self.criar_instrucoes(linha.decode('utf-8'))
-
-				conn, cliente = conexao.accept()
-				data = conn.recv(256)
-				instrucao_inicial = json.loads(data.decode('utf-8'))
+				data = conn.recv(16384)
+				self.fita, instrucoes, instrucao_inicial = json.loads(data.decode())
+				for i in instrucoes:
+					self.criar_instrucoes(i)
 				conn.close()
 
 			self.maquina.limpar_maquina()
-			self.maquina.entrada_info(self.fita, self.instrucoes, instrucao_inicial)
+			self.maquina.entrada_info(list(self.fita), self.instrucoes, instrucao_inicial)
 			self.gerar_tabela()
 			self.atualizar_dados(1, 0, instrucao_inicial)
+			estado_atual = None
+			while estado_atual != 'END':
+				qt_app.processEvents()
+				estado_atual = self.proximo_passo()
+				time.sleep(0.5)
 
 	def criar_instrucoes(self, linha):
-		print(linha)
+		chave = (linha[0], linha[1])
+
+		self.instrucoes[chave] = [linha[2][0], linha[2][1], linha[2][2]]
 
 	def run(self):
 		self.show()
