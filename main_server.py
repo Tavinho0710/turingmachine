@@ -27,7 +27,7 @@ class Executar(QWidget):
 		self.tabela_fita.verticalHeader().hide()
 		self.tabela_fita.setStyleSheet('font: 12pt')
 		self.botao_receberdados = QPushButton('Receber Dados')
-		self.botao_receberdados.clicked.connect(self.receber)
+		self.botao_receberdados.clicked.connect(self.servidor_ativo)
 		self.botao_proximopasso = QPushButton('Próximo passo')
 		self.botao_proximopasso.clicked.connect(self.proximo_passo)
 		self.botao_passoapasso_1s = QPushButton('Resumir processo (1s/passo)')
@@ -41,6 +41,14 @@ class Executar(QWidget):
 		layout.addLayout(self.caixa_execucao)
 		self.setLayout(layout)
 
+	def servidor_ativo(self):
+		while True:
+			cliente = self.receber()
+			self.passo_a_passo()
+			while self.t and self.t.isAlive():
+				qt_app.processEvents()
+			self.enviar(cliente)
+
 	def passo_a_passo(self):
 		self.t = Thread(target=self.passo_a_passo_thread)
 		if self.t.isAlive():
@@ -53,10 +61,10 @@ class Executar(QWidget):
 		while estado_atual != 'END':
 			qt_app.processEvents()
 			estado_atual = self.proximo_passo()
-			time.sleep(3)
+			time.sleep(0.5)
 
 	def proximo_passo(self):
-		fita, posicao_cabeca, estado_atual = self.maquina.operacao()
+		self.fita, posicao_cabeca, estado_atual = self.maquina.operacao()
 		self.gerar_tabela()
 		self.atualizar_dados(1, posicao_cabeca, estado_atual)
 		if estado_atual == 'END':
@@ -93,6 +101,18 @@ class Executar(QWidget):
 		self.maquina.entrada_info(list(self.fita), self.instrucoes, instrucao_inicial)
 		self.gerar_tabela()
 		self.atualizar_dados(1, 0, instrucao_inicial)
+		return cliente
+
+	def enviar(self, cliente):
+		porta = 8888
+		cliente = list(cliente)
+		print(cliente[0])
+		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
+			conexao.connect((cliente[0], porta))
+			data = json.dumps(self.fita)
+			conexao.sendall(data.encode('utf-8'))
+			conexao.close()
+		pass
 
 	def criar_instrucoes(self, linha):
 		chave = (linha[0], linha[1])
