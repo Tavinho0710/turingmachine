@@ -211,6 +211,7 @@ class Window(QWidget):
 		instrucoes_ = []
 		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
 			conexao.connect((ip, porta))
+			print('Conectado a: ', ip, porta)
 
 			for i in instrucoes:
 				instrucao = list(i)

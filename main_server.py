@@ -94,7 +94,7 @@ class Executar(QWidget):
 	def enviar(self, cliente):
 		porta = 8889
 		cliente = list(cliente)
-		print(cliente[0])
+		print('Conectado a: ', cliente[0])
 		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
 			conexao.connect((cliente[0], porta))
 			data = json.dumps(self.fita)
