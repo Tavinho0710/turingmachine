@@ -64,13 +64,14 @@ class Window(QWidget):
 
 		self.tabela()
 
-		botao_passoapasso = QPushButton('Execução passo a passo')
-		# botao_passoapasso.clicked.connect(self.exec_passoapasso)
+		texto_ip = QLabel('IP do servidor')
+		entrada_ip = QLineEdit()
 		botao_direto = QPushButton('Execução direta')
-		botao_direto.clicked.connect(self.exec_direto)
+		botao_direto.clicked.connect(lambda: self.exec_direto(entrada_ip.text()))
 		caixa_execucao = QHBoxLayout()
+		caixa_execucao.addWidget(texto_ip)
+		caixa_execucao.addWidget(entrada_ip)
 		caixa_execucao.addWidget(botao_direto)
-		caixa_execucao.addWidget(botao_passoapasso)
 		self.caixa_interface.addLayout(caixa_execucao)
 		self.texto_resultado = QLabel('')
 		self.texto_resultado.setStyleSheet('font: 14pt')
@@ -193,11 +194,11 @@ class Window(QWidget):
 		instrucao_inicial = self.entrada_primeirainstrucao.text()
 		return fita, instrucoes, instrucao_inicial
 
-	def exec_direto(self):
+	def exec_direto(self, ip):
 		fita, instrucoes, instrucao_inicial = self.recolher_dados()
 		if fita is not '':
 			try:
-				self.enviar(fita, instrucoes, instrucao_inicial)
+				self.enviar(ip, fita, instrucoes, instrucao_inicial)
 				self.receber()
 			except Exception as e:
 				self.texto_resultado.clear()
@@ -205,11 +206,11 @@ class Window(QWidget):
 		else:
 			self.texto_resultado.setText('Entrada de fita vazia')
 
-	def enviar(self, fita, instrucoes, instrucao_inicial):
-		server, porta = 'localhost', 8888
+	def enviar(self, ip, fita, instrucoes, instrucao_inicial):
+		porta = 8888
 		instrucoes_ = []
 		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
-			conexao.connect((server, porta))
+			conexao.connect((ip, porta))
 
 			for i in instrucoes:
 				instrucao = list(i)
@@ -221,9 +222,10 @@ class Window(QWidget):
 			conexao.close()
 
 	def receber(self):
-		host, porta = '', 8888
+		host, porta = '', 8889
 		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conexao:
 			conexao.bind((host, porta))
+			print(conexao.getsockname())
 			conexao.listen(1)
 			conn, server = conexao.accept()
 			print('Conectado a {}'.format(server))
