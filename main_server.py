@@ -52,7 +52,7 @@ class Executar(QWidget):
 		while estado_atual != 'END':
 			qt_app.processEvents()
 			estado_atual = self.proximo_passo()
-			time.sleep(0.5)
+			time.sleep(0.1)
 
 	def proximo_passo(self):
 		self.fita, posicao_cabeca, estado_atual = self.maquina.operacao()
