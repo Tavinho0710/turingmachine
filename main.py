@@ -259,9 +259,12 @@ class Executar(QWidget):
 		self.caixa_execucao = QHBoxLayout()
 		self.caixa_execucao.addWidget(self.botao_proximopasso)
 		self.caixa_execucao.addWidget(self.botao_passoapasso_1s)
+		self.texto_resultado = QLabel()
+		self.texto_resultado.setStyleSheet('font: 14pt')
 		layout = QVBoxLayout()
 		layout.addWidget(self.tabela_fita)
 		layout.addLayout(self.caixa_execucao)
+		layout.addWidget(self.texto_resultado)
 		self.setLayout(layout)
 
 	def passo_a_passo(self):
@@ -272,15 +275,20 @@ class Executar(QWidget):
 			self.t.start()
 
 	def passo_a_passo_thread(self):
-		estado_atual = None
-		self.tempo = 0.5
-		while estado_atual.upper() != 'END':
+		estado_atual = ''
+		self.tempo = 1
+		while estado_atual.upper() != 'END' and estado_atual.upper() != 'ERRO':
 			qt_app.processEvents()
 			estado_atual = self.proximo_passo()
 			time.sleep(self.tempo)
 
 	def proximo_passo(self):
-		fita, posicao_cabeca, estado_atual = self.maquina.operacao()
+		try:
+			fita, posicao_cabeca, estado_atual = self.maquina.operacao()
+		except Exception as e:
+			self.texto_resultado.setText('Erro: {}'.format(e))
+			estado_atual = 'ERRO'
+			return estado_atual
 		self.gerar_tabela()
 		self.atualizar_dados(1, posicao_cabeca, estado_atual)
 		if estado_atual.upper() == 'END':
