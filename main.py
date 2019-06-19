@@ -1,5 +1,5 @@
 # Máquina de turing para trabalho de 6 fase de Ciência da Computação
-# Autor: Gustavo Niehues
+# Autor: Gustavo Niehues e Welliton Serafim
 
 import sys
 import time
@@ -92,7 +92,7 @@ class Window(QWidget):
 		                     'passo da instrução final.')
 		observacao4.setWordWrap(True)
 
-		texto_geracao = QLabel('Instruções gravadas')
+		texto_geracao = QLabel('Instruções gravadas:')
 		botao_soma = QPushButton('Adição')
 		botao_soma.clicked.connect(lambda: self.gerar_instrucao(instrucoes.soma))
 		botao_subtracao = QPushButton('Subtração')
@@ -111,8 +111,8 @@ class Window(QWidget):
 
 		caixa_barralateral = QVBoxLayout()
 		caixa_barralateral.addWidget(observacao1)
-		caixa_barralateral.addWidget(observacao5)
 		caixa_barralateral.addWidget(observacao2)
+		caixa_barralateral.addWidget(observacao5)
 		caixa_barralateral.addWidget(observacao3)
 		caixa_barralateral.addWidget(observacao4)
 		caixa_barralateral.addLayout(caixa_instrucoes)
@@ -206,10 +206,10 @@ class Window(QWidget):
 		self.texto_resultado.clear()
 		fita, instrucoes, instrucao_inicial = self.recolher_dados()
 		try:
+			if not fita:
+				raise Exception('Fita não detectada')
 			self.maquina.entrada_info(list(fita), instrucoes, instrucao_inicial)
 			self.texto_resultado.setText('Resultado: {0}'.format(self.maquina.start()))
-		except IndexError:
-			self.texto_resultado.setText('Erro: Fita não foi inserida')
 		except Exception as e:
 			self.texto_resultado.setText('Erro: {}'.format(e))
 
@@ -240,7 +240,6 @@ class Window(QWidget):
 
 class Executar(QWidget):
 	def __init__(self):
-		# TODO: Histórico de instruções
 
 		QWidget.__init__(self)
 		self.setWindowTitle('Executar')
@@ -307,6 +306,8 @@ class Executar(QWidget):
 			self.atualizar_dados(0, i, self.fita[i])
 
 	def run(self, fita, instrucoes, instrucao_inicial):
+		if not fita:
+			raise Exception('Fita não detectada')
 		self.fita = list(fita)
 		self.instrucoes = instrucoes
 		self.maquina.limpar_maquina()

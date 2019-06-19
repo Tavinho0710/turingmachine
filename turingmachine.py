@@ -34,7 +34,7 @@ class TuringMachine(object):
 			elif instrucao[2].upper() == 'E' and self.posicao_cabeca > 0:
 				self.posicao_cabeca -= 1
 			else:
-				pass
+				raise Exception('Direção indicada na instrução {0},{1} não foi reconhecida'.format(chave[0], chave[1]))
 			if self.posicao_cabeca == len(self.fita):
 				self.fita.append(' ')
 			self.leitura_cabeca = self.fita[self.posicao_cabeca]
