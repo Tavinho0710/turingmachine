@@ -2,8 +2,8 @@
 # Autor: Gustavo Niehues e Welliton Serafim
 
 import sys
+import threading
 import time
-from threading import Thread
 
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, \
 	QTableWidget, QTableWidgetItem
@@ -242,6 +242,7 @@ class Executar(QWidget):
 	def __init__(self):
 
 		QWidget.__init__(self)
+		self.t_pause = False
 		self.setWindowTitle('Executar')
 		self.setMinimumWidth(800)
 		self.fita = None
@@ -255,9 +256,12 @@ class Executar(QWidget):
 		self.botao_proximopasso.clicked.connect(self.proximo_passo)
 		self.botao_passoapasso_1s = QPushButton('Resumir processo (1s/passo)')
 		self.botao_passoapasso_1s.clicked.connect(self.passo_a_passo)
+		self.botao_pausa = QPushButton('Pausar execução')
+		self.botao_pausa.clicked.connect(self.pausa_passoapasso)
 		self.caixa_execucao = QHBoxLayout()
 		self.caixa_execucao.addWidget(self.botao_proximopasso)
 		self.caixa_execucao.addWidget(self.botao_passoapasso_1s)
+		self.caixa_execucao.addWidget(self.botao_pausa)
 		self.texto_resultado = QLabel()
 		self.texto_resultado.setStyleSheet('font: 14pt')
 		layout = QVBoxLayout()
@@ -267,16 +271,17 @@ class Executar(QWidget):
 		self.setLayout(layout)
 
 	def passo_a_passo(self):
-		self.t = Thread(target=self.passo_a_passo_thread)
+		self.t = threading.Thread(target=self.passo_a_passo_thread)
+		self.t_pause = False
 		if self.t.isAlive():
-			pass
+			self.t.run()
 		else:
 			self.t.start()
 
 	def passo_a_passo_thread(self):
 		estado_atual = ''
 		self.tempo = 1
-		while estado_atual.upper() != 'END' and estado_atual.upper() != 'ERRO':
+		while estado_atual.upper() != 'END' and estado_atual.upper() != 'ERRO' and not self.t_pause:
 			qt_app.processEvents()
 			estado_atual = self.proximo_passo()
 			time.sleep(self.tempo)
@@ -295,6 +300,9 @@ class Executar(QWidget):
 			self.botao_passoapasso_1s.setDisabled
 		return estado_atual
 
+	def pausa_passoapasso(self):
+		self.t_pause = True
+
 	def atualizar_dados(self, linha, coluna, info):
 		self.tabela_fita.setItem(linha, coluna, QTableWidgetItem(info))
 		self.tabela_fita.setColumnWidth(coluna, 2)
@@ -306,6 +314,7 @@ class Executar(QWidget):
 			self.atualizar_dados(0, i, self.fita[i])
 
 	def run(self, fita, instrucoes, instrucao_inicial):
+		self.texto_resultado.clear()
 		if not fita:
 			raise Exception('Fita não detectada')
 		self.fita = list(fita)
